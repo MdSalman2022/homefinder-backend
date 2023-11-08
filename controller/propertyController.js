@@ -1,12 +1,5 @@
-// const { supabase } = require("../app");
 const pool = require("../database");
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  "https://zsarqmlqnksuwzwmupwh.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzYXJxbWxxbmtzdXd6d211cHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTkxODU2NjksImV4cCI6MjAxNDc2MTY2OX0.eJMUBZS8FA1_SnGAKFcLZmRO2d3xN84EMis-eWUvReA"
-);
-
+ 
 exports.getAllProperties = (req, res) => {
   pool.query("SELECT * FROM properties", (err, rows) => {
     if (err) {
