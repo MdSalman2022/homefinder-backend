@@ -11,9 +11,9 @@ require("dotenv").config();
 
 // for production
 const pool = mysql.createConnection({
-  host: "salman-mysql.mysql.database.azure.com",
-  user: "salman",
-  password: "Vul@@rK0rbon@",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
   database: "property",
   connectionLimit: 10,
 });
