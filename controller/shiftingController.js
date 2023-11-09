@@ -33,6 +33,7 @@ function createShiftingsTable(callback) {
             dayOfShifting VARCHAR(255),
             from_location VARCHAR(255),
             to_location VARCHAR(255),
+            submittedBy VARCHAR(255),
             Timestamp TIMESTAMP
           )
         `;
@@ -55,8 +56,15 @@ function createShiftingsTable(callback) {
 
 exports.createShifting = async (req, res, next) => {
   try {
-    const { name, phone, email, dayOfShifting, from_location, to_location } =
-      req.body;
+    const {
+      name,
+      phone,
+      email,
+      dayOfShifting,
+      from_location,
+      to_location,
+      submittedBy,
+    } = req.body;
 
     createShiftingsTable((err) => {
       if (err) {
@@ -66,13 +74,21 @@ exports.createShifting = async (req, res, next) => {
 
       // Insert the data into the "shiftings" table
       const insertDataQuery = `
-          INSERT INTO shiftings (name, phone, email, dayOfShifting, from_location, to_location) 
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO shiftings (name, phone, email, dayOfShifting, from_location, to_location, submittedBy) 
+          VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
       pool.query(
         insertDataQuery,
-        [name, phone, email, dayOfShifting, from_location, to_location],
+        [
+          name,
+          phone,
+          email,
+          dayOfShifting,
+          from_location,
+          to_location,
+          submittedBy,
+        ],
         (err, result) => {
           if (err) {
             console.error(err);

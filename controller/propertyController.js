@@ -1,20 +1,24 @@
 const pool = require("../database");
- 
+
 exports.getAllProperties = (req, res) => {
-  pool.query("SELECT * FROM properties", (err, rows) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: "Internal server error" });
-      return;
+  pool.query(
+    "SELECT properties.*, users.photo AS ownerPhoto FROM properties LEFT JOIN users ON properties.PostedBy = users.id WHERE properties.RentedBy IS NULL",
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+      res.json(rows);
     }
-    res.json(rows);
-  });
+  );
 };
 
-exports.getPropertiesByPostedBy = (req, res) => {
+exports.getPropertiesByUID = (req, res) => {
   const propertyId = req.query.id;
+
   pool.query(
-    "SELECT * FROM properties WHERE PostedBy = ?",
+    "SELECT properties.*, users.photo AS ownerPhoto FROM properties LEFT JOIN users ON properties.PostedBy = users.id WHERE properties.pid = ?",
     [propertyId],
     (err, rows) => {
       if (err) {
@@ -22,7 +26,23 @@ exports.getPropertiesByPostedBy = (req, res) => {
         res.status(500).json({ error: "Internal server error" });
         return;
       }
-      res.json(rows); // Return the array of matching properties
+      res.json(rows);
+    }
+  );
+};
+
+exports.getPropertiesByPostedBy = (req, res) => {
+  const ownerId = req.query.id;
+  pool.query(
+    "SELECT properties.*, users.*, reservedusers.* FROM properties LEFT JOIN users ON properties.RentedBy = users.id LEFT JOIN reservedusers ON (properties.RentedBy = reservedusers.submittedBy OR users.id = reservedusers.submittedBy) WHERE properties.PostedBy = ?",
+    [ownerId],
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+      res.json(rows);
     }
   );
 };
@@ -31,7 +51,7 @@ exports.createTable = async (req, res, next) => {
   try {
     const createTableQuery = `
     CREATE TABLE properties (
-    UID INT AUTO_INCREMENT PRIMARY KEY,
+    pid INT AUTO_INCREMENT PRIMARY KEY,
     Name VARCHAR(255),
     Description TEXT,
     RentFee DECIMAL(10, 2),
@@ -118,6 +138,39 @@ exports.updateProperty = (req, res) => {
         return;
       }
       res.json({ message: "Property updated", id: propertyId });
+    }
+  );
+};
+
+exports.propertyReserved = (req, res) => {
+  const { phone, checkIn, submittedBy, propertyId } = req.body;
+
+  console.log("body", req.body);
+
+  pool.query(
+    "UPDATE properties SET Status = ?, RentedBy = ? WHERE id = ?",
+    ["Reserved", submittedBy, propertyId],
+    (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+      console.log("property updated");
+      res.json({ message: "Property updated", id: propertyId });
+    }
+  );
+  pool.query(
+    "INSERT INTO reservedUsers (phone, checkInDate, submittedBy, propertyId) VALUES (?, ?, ?, ?)",
+    [phone, checkIn, submittedBy, propertyId],
+    (err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+
+      console.log("reservedusers updated");
     }
   );
 };

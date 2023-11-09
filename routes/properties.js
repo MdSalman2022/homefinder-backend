@@ -3,7 +3,9 @@ const propertyController = require("../controller/propertyController");
 const router = express.Router();
 
 router.get("/getAll", propertyController.getAllProperties);
+router.get("/getPropertiesByUID", propertyController.getPropertiesByUID);
 router.get("/getPropertiesById", propertyController.getPropertiesByPostedBy);
+router.put("/propertyReserved", propertyController.propertyReserved);
 router.post("/createTable", propertyController.createTable);
 router.post("/create", propertyController.createProperty);
 router.put("/:id", propertyController.updateProperty);
