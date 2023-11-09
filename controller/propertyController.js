@@ -148,7 +148,7 @@ exports.propertyReserved = (req, res) => {
   console.log("body", req.body);
 
   pool.query(
-    "UPDATE properties SET Status = ?, RentedBy = ? WHERE id = ?",
+    "UPDATE properties SET Status = ?, RentedBy = ? WHERE pid = ?",
     ["Reserved", submittedBy, propertyId],
     (err) => {
       if (err) {
