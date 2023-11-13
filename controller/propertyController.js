@@ -47,6 +47,36 @@ exports.getPropertiesByPostedBy = (req, res) => {
   );
 };
 
+exports.filterProperties = (req, res) => {
+  const { thana, district, propertyType, maxRent } = req.body;
+  console.log("req.body", req.body);
+
+  pool.query(
+    "SELECT * from properties WHERE properties.thana = ? AND properties.district = ? AND properties.propertyType = ? AND properties.RentFee <= ? AND properties.RentedBy IS NULL",
+    [thana, district, propertyType, maxRent],
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+      console.log("response", rows);
+      if (rows?.length > 0) {
+        res.json({
+          success: true,
+          properties: rows,
+        });
+      } else {
+        res.json({
+          success: false,
+          properties: [],
+          issue: "No property found",
+        });
+      }
+    }
+  );
+};
+
 exports.createTable = async (req, res, next) => {
   try {
     const createTableQuery = `
@@ -90,6 +120,9 @@ exports.createProperty = async (req, res, next) => {
       Features,
       Images,
       Location,
+      thana,
+      district,
+      propertyType,
       PostedBy,
       FloorPlanImage,
       PropertyInfo,
@@ -97,7 +130,7 @@ exports.createProperty = async (req, res, next) => {
     } = req.body;
 
     pool.query(
-      "INSERT INTO properties (Name, Description, RentFee, Features, Images, Location, PostedBy, FloorPlanImage, PropertyInfo, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO properties (Name, Description, RentFee, Features, Images, Location,thana,district, propertyType, PostedBy, FloorPlanImage, PropertyInfo, Status) VALUES (?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?, ?)",
       [
         Name,
         Description,
@@ -105,6 +138,9 @@ exports.createProperty = async (req, res, next) => {
         Features,
         Images,
         Location,
+        thana,
+        district,
+        propertyType,
         PostedBy,
         FloorPlanImage,
         JSON.stringify(PropertyInfo),
