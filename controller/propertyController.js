@@ -162,11 +162,43 @@ exports.createProperty = async (req, res, next) => {
 };
 
 exports.updateProperty = (req, res) => {
-  const propertyId = req.params.id;
-  const updateProperty = req.body;
+  const propertyId = req.body.id;
+  const {
+    Description,
+    RentFee,
+    Location,
+    thana,
+    district,
+    propertyType,
+    PropertyInfo,
+  } = req.body;
+
+  // Ensure that at least one field is provided to update
+  if (
+    !Description &&
+    !RentFee &&
+    !Location &&
+    !PropertyInfo &&
+    !thana &&
+    !district &&
+    !propertyType
+  ) {
+    return res.status(400).json({ error: "No fields provided for update" });
+  }
+
+  // Construct the update fields dynamically based on provided values
+  const updateFields = {};
+  if (Description) updateFields.Description = Description;
+  if (RentFee) updateFields.RentFee = RentFee;
+  if (Location) updateFields.Location = Location;
+  if (PropertyInfo) updateFields.PropertyInfo = JSON.stringify(PropertyInfo);
+  if (thana) updateFields.thana = thana;
+  if (district) updateFields.district = district;
+  if (propertyType) updateFields.propertyType = propertyType;
+
   pool.query(
-    "UPDATE properties SET ? WHERE id = ?",
-    [updateProperty, propertyId],
+    "UPDATE properties SET ? WHERE pid = ?",
+    [updateFields, propertyId],
     (err) => {
       if (err) {
         console.error(err);
@@ -212,8 +244,8 @@ exports.propertyReserved = (req, res) => {
 };
 
 exports.deleteProperty = (req, res) => {
-  const propertyId = req.params.id;
-  pool.query("DELETE FROM properties WHERE id = ?", [propertyId], (err) => {
+  const propertyId = req.body.id;
+  pool.query("DELETE FROM properties WHERE pid = ?", [propertyId], (err) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: "Internal server error" });

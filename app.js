@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const propertyRouter = require("./routes/properties");
+const productRouter = require("./routes/products");
 const userRoutes = require("./routes/users");
 const shiftingRoutes = require("./routes/shiftings");
 const { createClient } = require("@supabase/supabase-js");
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/properties", propertyRouter);
+app.use("/products", productRouter);
 app.use("/users", userRoutes);
 app.use("/shiftings", shiftingRoutes);
 

@@ -9,7 +9,8 @@ router.post("/filterProperties", propertyController.filterProperties);
 router.put("/propertyReserved", propertyController.propertyReserved);
 router.post("/createTable", propertyController.createTable);
 router.post("/create", propertyController.createProperty);
+router.put("/updateProperty", propertyController.updateProperty);
 router.put("/:id", propertyController.updateProperty);
-router.delete("/:id", propertyController.deleteProperty);
+router.delete("/deleteProperty", propertyController.deleteProperty);
 
 module.exports = router;

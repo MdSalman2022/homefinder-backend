@@ -7,8 +7,8 @@ require("dotenv").config();
   user: "root",
   password: "",
   database: "property",
-}); */
-
+});
+ */
 // for production
 const pool = mysql.createConnection({
   host: process.env.DB_HOST || "localhost",
