@@ -1,17 +1,33 @@
 const pool = require("../database");
 
 exports.getAllProperties = (req, res) => {
-  pool.query(
-    "SELECT properties.*, users.photo AS ownerPhoto FROM properties LEFT JOIN users ON properties.PostedBy = users.id WHERE properties.RentedBy IS NULL",
-    (err, rows) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: "Internal server error" });
-        return;
-      }
-      res.json(rows);
+  const page = req.query.page || 1;
+  const limit = req.query.limit;
+  const offset = (page - 1) * limit;
+  const sortOrder = req.query.sortOrder || "asc"; // Default to ascending order
+
+  console.log("page", page);
+  console.log("limit", limit);
+  console.log("offset", offset);
+  console.log("sortOrder", sortOrder);
+
+  const query = `
+    SELECT properties.*, users.photo AS ownerPhoto
+    FROM properties
+    LEFT JOIN users ON properties.PostedBy = users.id
+    WHERE properties.RentedBy IS NULL
+    ORDER BY RentFee ${sortOrder.toUpperCase()} 
+    LIMIT ? OFFSET ?
+  `;
+
+  pool.query(query, [parseInt(limit), parseInt(offset)], (err, rows) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: "Internal server error" });
+      return;
     }
-  );
+    res.json(rows);
+  });
 };
 
 exports.getPropertiesByUID = (req, res) => {
@@ -48,12 +64,13 @@ exports.getPropertiesByPostedBy = (req, res) => {
 };
 
 exports.filterProperties = (req, res) => {
-  const { thana, district, propertyType, maxRent } = req.body;
+  const { thana, district, propertyType, maxRent, minRent, favoriteCount } =
+    req.body;
   console.log("req.body", req.body);
 
   pool.query(
-    "SELECT * from properties WHERE properties.thana = ? AND properties.district = ? AND properties.propertyType = ? AND properties.RentFee <= ? AND properties.RentedBy IS NULL",
-    [thana, district, propertyType, maxRent],
+    "SELECT *, JSON_LENGTH(JSON_UNQUOTE(BookmarkedByUsers)) AS bookmarkCount FROM properties WHERE properties.thana = ? AND properties.district = ? AND properties.propertyType = ? AND properties.RentFee BETWEEN ? AND ? AND properties.RentedBy IS NULL GROUP BY properties.pid HAVING bookmarkCount > ?",
+    [thana, district, propertyType, minRent, maxRent, favoriteCount],
     (err, rows) => {
       if (err) {
         console.error(err);
@@ -62,6 +79,7 @@ exports.filterProperties = (req, res) => {
       }
       console.log("response", rows);
       if (rows?.length > 0) {
+        console.log("rows", rows[0]?.bookmarkCount);
         res.json({
           success: true,
           properties: rows,
@@ -75,6 +93,18 @@ exports.filterProperties = (req, res) => {
       }
     }
   );
+};
+
+exports.getByDistinctThana = (req, res) => {
+  pool.query("SELECT DISTINCT thana FROM properties", (err, rows) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: "Internal server error" });
+      return;
+    }
+
+    res.json(rows);
+  });
 };
 
 exports.createTable = async (req, res, next) => {
@@ -159,6 +189,57 @@ exports.createProperty = async (req, res, next) => {
     console.error("Exception occurred:", exception);
     res.status(500).send(exception);
   }
+};
+
+exports.bookmarkProperty = (req, res) => {
+  const propertyId = req.body.id;
+  const { userId } = req.body;
+
+  // Ensure that at least one field is provided to update
+  if (!userId) {
+    return res.status(400).json({ error: "No fields provided for update" });
+  }
+
+  pool.query(
+    "SELECT bookmarkedByUsers FROM properties WHERE pid = ?",
+    [propertyId],
+    (selectErr, selectResult) => {
+      if (selectErr) {
+        console.error(selectErr);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+
+      let bookmarkedByUsers = [];
+      if (selectResult.length > 0) {
+        const existingBookmarked = selectResult[0].bookmarkedByUsers;
+        bookmarkedByUsers = existingBookmarked
+          ? JSON.parse(existingBookmarked)
+          : [];
+      }
+
+      // Append the new userId to the bookmarkedByUsers array
+      bookmarkedByUsers.push(userId);
+
+      // Construct the update fields dynamically based on provided values
+      const updateFields = {
+        bookmarkedByUsers: JSON.stringify(bookmarkedByUsers),
+      };
+
+      pool.query(
+        "UPDATE properties SET ? WHERE pid = ?",
+        [updateFields, propertyId],
+        (updateErr) => {
+          if (updateErr) {
+            console.error(updateErr);
+            res.status(500).json({ error: "Internal server error" });
+            return;
+          }
+          res.json({ message: "Property updated", id: propertyId });
+        }
+      );
+    }
+  );
 };
 
 exports.updateProperty = (req, res) => {
