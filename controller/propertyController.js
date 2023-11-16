@@ -209,22 +209,31 @@ exports.bookmarkProperty = (req, res) => {
         res.status(500).json({ error: "Internal server error" });
         return;
       }
-
+      console.log("selectResult", selectResult);
       let bookmarkedByUsers = [];
       if (selectResult.length > 0) {
         const existingBookmarked = selectResult[0].bookmarkedByUsers;
+        console.log("existingBookmarked", existingBookmarked);
         bookmarkedByUsers = existingBookmarked
           ? JSON.parse(existingBookmarked)
           : [];
+        console.log("bookmarkedByUsers", bookmarkedByUsers);
       }
 
-      // Append the new userId to the bookmarkedByUsers array
-      bookmarkedByUsers.push(userId);
+      if (bookmarkedByUsers.includes(userId)) {
+        bookmarkedByUsers = bookmarkedByUsers.filter((item) => item !== userId);
+      } else {
+        bookmarkedByUsers.push(userId);
+      }
+
+      console.log("bookmarkedByUsers", bookmarkedByUsers);
 
       // Construct the update fields dynamically based on provided values
       const updateFields = {
         bookmarkedByUsers: JSON.stringify(bookmarkedByUsers),
       };
+
+      console.log("updateFields", updateFields);
 
       pool.query(
         "UPDATE properties SET ? WHERE pid = ?",
