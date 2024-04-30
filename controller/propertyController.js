@@ -2,7 +2,7 @@ const pool = require("../database");
 
 exports.getAllProperties = (req, res) => {
   const page = req.query.page || 1;
-  const limit = req.query.limit;
+  const limit = req.query.limit || 10;
   const offset = (page - 1) * limit;
   const sortOrder = req.query.sortOrder || "asc"; // Default to ascending order
 
@@ -23,9 +23,10 @@ exports.getAllProperties = (req, res) => {
   pool.query(query, [parseInt(limit), parseInt(offset)], (err, rows) => {
     if (err) {
       console.error(err);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ error: "Internal server error", err });
       return;
     }
+    console.log("rows", rows);
     res.json(rows);
   });
 };

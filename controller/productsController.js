@@ -7,7 +7,7 @@ exports.getProducts = (req, res) => {
       res.status(500).json({ error: "Internal server error" });
       return;
     }
-    console.log("products", rows);
+    console.log("products");
     res.json(rows);
   });
 };
