@@ -66,6 +66,8 @@ exports.createShifting = async (req, res, next) => {
       submittedBy,
     } = req.body;
 
+    console.log("got called", req.body);
+
     createShiftingsTable((err) => {
       if (err) {
         res.status(500).json({ error: "Internal server error" });
@@ -74,7 +76,7 @@ exports.createShifting = async (req, res, next) => {
 
       // Insert the data into the "shiftings" table
       const insertDataQuery = `
-          INSERT INTO shiftings (name, phone, email, dayOfShifting, from_location, to_location, submittedBy) 
+          INSERT INTO shifting_requests (name, phone, email, dayOfShifting, from_location, to_location, submittedBy) 
           VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
@@ -95,7 +97,9 @@ exports.createShifting = async (req, res, next) => {
             res.status(500).json({ error: "Internal server error" });
             return;
           }
-          res.json({ message: "Shifting created", id: result.insertId });
+          res
+            .status(200)
+            .json({ message: "Shifting created", id: result.insertId });
         }
       );
     });

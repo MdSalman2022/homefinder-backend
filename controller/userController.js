@@ -38,10 +38,22 @@ exports.createUser = async (req, res, next) => {
       (err, result) => {
         if (err) {
           console.error(err);
-          res.status(500).json({ error: "Internal server error" });
+          if (err.code === "ER_DUP_ENTRY") {
+            res
+              .status(400)
+              .json({ success: false, error: "Email already registered" });
+          } else {
+            res
+              .status(500)
+              .json({ success: false, error: "Internal server error" });
+          }
           return;
         }
-        res.json({ message: "User created", id: result.insertId });
+        res.json({
+          success: true,
+          message: "User created",
+          id: result.insertId,
+        });
       }
     );
   } catch (exception) {

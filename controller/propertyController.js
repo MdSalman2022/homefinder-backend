@@ -6,10 +6,10 @@ exports.getAllProperties = (req, res) => {
   const offset = (page - 1) * limit;
   const sortOrder = req.query.sortOrder || "asc"; // Default to ascending order
 
-  console.log("page", page);
-  console.log("limit", limit);
-  console.log("offset", offset);
-  console.log("sortOrder", sortOrder);
+  // console.log("page", page);
+  // console.log("limit", limit);
+  // console.log("offset", offset);
+  // console.log("sortOrder", sortOrder);
 
   const query = `
     SELECT properties.*, users.photo AS ownerPhoto
@@ -26,7 +26,7 @@ exports.getAllProperties = (req, res) => {
       res.status(500).json({ error: "Internal server error", err });
       return;
     }
-    console.log("rows", rows);
+    // console.log("rows", rows);
     res.json(rows);
   });
 };
@@ -67,7 +67,7 @@ exports.getPropertiesByPostedBy = (req, res) => {
 exports.filterProperties = (req, res) => {
   const { thana, district, propertyType, maxRent, minRent, favoriteCount } =
     req.body;
-  console.log("req.body", req.body);
+  // console.log("req.body", req.body);
 
   pool.query(
     "SELECT *, JSON_LENGTH(JSON_UNQUOTE(BookmarkedByUsers)) AS bookmarkCount FROM properties WHERE properties.thana = ? AND properties.district = ? AND properties.propertyType = ? AND properties.RentFee BETWEEN ? AND ? AND properties.RentedBy IS NULL GROUP BY properties.pid HAVING bookmarkCount > ?",
@@ -78,9 +78,9 @@ exports.filterProperties = (req, res) => {
         res.status(500).json({ error: "Internal server error" });
         return;
       }
-      console.log("response", rows);
+      // console.log("response", rows);
       if (rows?.length > 0) {
-        console.log("rows", rows[0]?.bookmarkCount);
+        // console.log("rows", rows[0]?.bookmarkCount);
         res.json({
           success: true,
           properties: rows,
@@ -108,6 +108,23 @@ exports.getByDistinctThana = (req, res) => {
   });
 };
 
+exports.getByThana = (req, res) => {
+  const thana = req.query.thana;
+  pool.query(
+    "SELECT * FROM properties WHERE thana LIKE ?",
+    ["%" + thana + "%"],
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+        return;
+      }
+
+      console.log("get thana", rows);
+      res.json(rows);
+    }
+  );
+};
 exports.createTable = async (req, res, next) => {
   try {
     const createTableQuery = `
@@ -142,7 +159,7 @@ exports.createTable = async (req, res, next) => {
 };
 
 exports.createProperty = async (req, res, next) => {
-  console.log("req.body", req.body);
+  // console.log("req.body", req.body);
   try {
     const {
       Name,
@@ -210,15 +227,15 @@ exports.bookmarkProperty = (req, res) => {
         res.status(500).json({ error: "Internal server error" });
         return;
       }
-      console.log("selectResult", selectResult);
+      // console.log("selectResult", selectResult);
       let bookmarkedByUsers = [];
       if (selectResult.length > 0) {
         const existingBookmarked = selectResult[0].bookmarkedByUsers;
-        console.log("existingBookmarked", existingBookmarked);
+        // console.log("existingBookmarked", existingBookmarked);
         bookmarkedByUsers = existingBookmarked
           ? JSON.parse(existingBookmarked)
           : [];
-        console.log("bookmarkedByUsers", bookmarkedByUsers);
+        // console.log("bookmarkedByUsers", bookmarkedByUsers);
       }
 
       if (bookmarkedByUsers.includes(userId)) {
@@ -227,14 +244,14 @@ exports.bookmarkProperty = (req, res) => {
         bookmarkedByUsers.push(userId);
       }
 
-      console.log("bookmarkedByUsers", bookmarkedByUsers);
+      // console.log("bookmarkedByUsers", bookmarkedByUsers);
 
       // Construct the update fields dynamically based on provided values
       const updateFields = {
         bookmarkedByUsers: JSON.stringify(bookmarkedByUsers),
       };
 
-      console.log("updateFields", updateFields);
+      // console.log("updateFields", updateFields);
 
       pool.query(
         "UPDATE properties SET ? WHERE pid = ?",
@@ -304,7 +321,7 @@ exports.updateProperty = (req, res) => {
 exports.propertyReserved = (req, res) => {
   const { phone, checkIn, submittedBy, propertyId } = req.body;
 
-  console.log("body", req.body);
+  // console.log("body", req.body);
 
   pool.query(
     "UPDATE properties SET Status = ?, RentedBy = ? WHERE pid = ?",
@@ -315,7 +332,7 @@ exports.propertyReserved = (req, res) => {
         res.status(500).json({ error: "Internal server error" });
         return;
       }
-      console.log("property updated");
+      // console.log("property updated");
       res.json({ message: "Property updated", id: propertyId });
     }
   );
@@ -329,7 +346,7 @@ exports.propertyReserved = (req, res) => {
         return;
       }
 
-      console.log("reservedusers updated");
+      // console.log("reservedusers updated");
     }
   );
 };

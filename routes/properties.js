@@ -6,6 +6,7 @@ router.get("/getAll", propertyController.getAllProperties);
 router.get("/getPropertiesByUID", propertyController.getPropertiesByUID);
 router.get("/getPropertiesById", propertyController.getPropertiesByPostedBy);
 router.get("/getByDistinctThana", propertyController.getByDistinctThana);
+router.get("/getByThana", propertyController.getByThana);
 router.post("/filterProperties", propertyController.filterProperties);
 router.put("/propertyReserved", propertyController.propertyReserved);
 router.post("/createTable", propertyController.createTable);
